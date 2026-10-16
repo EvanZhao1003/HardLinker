@@ -1,0 +1,85 @@
+<Window x:Class="HardLinker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="HardLinker" Height="690" Width="780" MinHeight="600" MinWidth="680"
+        WindowStartupLocation="CenterScreen" Background="#F5F7FB">
+  <Grid Margin="26">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <StackPanel Margin="0,0,0,18">
+      <TextBlock Text="HardLinker" FontSize="27" FontWeight="Bold" Foreground="#172033"/>
+      <TextBlock x:Name="SubtitleText" Text="Create Windows file hard links" Margin="0,5,0,0" Foreground="#667085"/>
+    </StackPanel>
+    <TabControl Grid.Row="1" Padding="14" Background="White">
+      <TabItem x:Name="FilesTab" Header="Files">
+        <Grid Margin="8,14">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <DockPanel>
+            <Button x:Name="AddFilesButton" Content="Add files…" Click="AddFiles_Click" DockPanel.Dock="Right"/>
+            <TextBlock x:Name="SourceFilesLabel" Text="Source files (multiple selection allowed)" VerticalAlignment="Center" FontWeight="SemiBold"/>
+          </DockPanel>
+          <ListBox x:Name="FilesList" Grid.Row="1" Margin="0,10,0,14" Padding="6"/>
+          <StackPanel Grid.Row="2">
+            <TextBlock x:Name="FileTargetLabel" Text="Destination folder" FontWeight="SemiBold" Margin="0,0,0,7"/>
+            <DockPanel>
+              <Button x:Name="ChooseFileTargetButton" Content="Choose…" Click="ChooseFileTarget_Click" DockPanel.Dock="Right"/>
+              <TextBox x:Name="FileTargetText"/>
+            </DockPanel>
+            <DockPanel Margin="0,9,0,0">
+              <Button x:Name="SaveFileTargetButton" Content="Remember folder" Click="SaveFileTarget_Click" DockPanel.Dock="Right"/>
+              <ComboBox x:Name="FileTargetsCombo" SelectionChanged="FileTarget_SelectionChanged" IsEditable="False"/>
+            </DockPanel>
+          </StackPanel>
+          <Button x:Name="CreateFilesButton" Grid.Row="3" Content="Create file hard links" Click="CreateFiles_Click" HorizontalAlignment="Right" Margin="0,18,0,0" Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="SemiBold"/>
+        </Grid>
+      </TabItem>
+      <TabItem x:Name="FoldersTab" Header="Folders">
+        <Grid Margin="8,14">
+          <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+          <TextBlock x:Name="SourceFolderLabel" Text="Source folder (top-level files only; no recursion)" FontWeight="SemiBold" Margin="0,0,0,7"/>
+          <DockPanel Grid.Row="1">
+            <Button x:Name="ChooseSourceFolderButton" Content="Choose…" Click="ChooseSourceFolder_Click" DockPanel.Dock="Right"/>
+            <TextBox x:Name="SourceFolderText"/>
+          </DockPanel>
+          <TextBlock x:Name="FolderTargetLabel" Grid.Row="2" Text="Destination parent folder" FontWeight="SemiBold" Margin="0,15,0,7"/>
+          <DockPanel Grid.Row="3">
+            <Button x:Name="ChooseFolderTargetButton" Content="Choose…" Click="ChooseFolderTarget_Click" DockPanel.Dock="Right"/>
+            <TextBox x:Name="FolderTargetText"/>
+          </DockPanel>
+          <StackPanel Grid.Row="4" Margin="0,15,0,0">
+            <TextBlock x:Name="FolderNameLabel" Text="New folder name (defaults to source folder name)" FontWeight="SemiBold" Margin="0,0,0,7"/>
+            <DockPanel>
+              <Button x:Name="SaveFolderNameButton" Content="Remember name" Click="SaveFolderName_Click" DockPanel.Dock="Right"/>
+              <TextBox x:Name="FolderNameText"/>
+            </DockPanel>
+            <ComboBox x:Name="FolderNamesCombo" Margin="0,9,0,0" SelectionChanged="FolderName_SelectionChanged"/>
+            <TextBlock x:Name="FolderHintText" Text="Existing files with the same name are skipped; cross-volume files are reported as failures. Subfolders are ignored." Foreground="#667085" Margin="0,14,0,0" TextWrapping="Wrap"/>
+          </StackPanel>
+          <Button x:Name="CreateFolderLinksButton" Grid.Row="5" Content="Create folder hard links" Click="CreateFolderLinks_Click" HorizontalAlignment="Right" Margin="0,18,0,0" Background="{StaticResource AccentBrush}" Foreground="White" FontWeight="SemiBold"/>
+        </Grid>
+      </TabItem>
+      <TabItem x:Name="SettingsTab" Header="Settings">
+        <StackPanel Margin="8,14" MaxWidth="640" HorizontalAlignment="Left">
+          <TextBlock x:Name="LanguageLabel" Text="Language" FontWeight="SemiBold" Margin="0,0,0,8"/>
+          <ComboBox x:Name="LanguageCombo" Width="180" HorizontalAlignment="Left" SelectionChanged="Language_SelectionChanged">
+            <ComboBoxItem Content="English" Tag="en"/>
+            <ComboBoxItem Content="中文" Tag="zh"/>
+          </ComboBox>
+          <TextBlock x:Name="DefaultSourceLabel" Text="Default source folder" FontWeight="SemiBold" Margin="0,22,0,7"/>
+          <DockPanel Margin="0,0,0,14">
+            <Button x:Name="ChooseDefaultSourceButton" Content="Choose…" Click="ChooseDefaultSource_Click" DockPanel.Dock="Right"/>
+            <TextBox x:Name="DefaultSourceText"/>
+          </DockPanel>
+          <TextBlock x:Name="DefaultTargetLabel" Text="Default destination parent folder" FontWeight="SemiBold" Margin="0,0,0,7"/>
+          <DockPanel Margin="0,0,0,12">
+            <Button x:Name="ChooseDefaultTargetButton" Content="Choose…" Click="ChooseDefaultTarget_Click" DockPanel.Dock="Right"/>
+            <TextBox x:Name="DefaultTargetText"/>
+          </DockPanel>
+          <Button x:Name="SaveDefaultsButton" Content="Save default folders" Click="SaveDefaultFolders_Click" HorizontalAlignment="Left"/>
+        </StackPanel>
+      </TabItem>
+    </TabControl>
+    <TextBlock Grid.Row="2" x:Name="StatusText" Text="Hard links share the same file data; changes through any link affect all links." Margin="2,14,0,0" Foreground="#667085" TextWrapping="Wrap"/>
+  </Grid>
+</Window>
