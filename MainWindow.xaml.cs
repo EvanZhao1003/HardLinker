@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +15,7 @@ public partial class MainWindow : Window
     private readonly AppSettings _settings = SettingsStore.Load();
     private readonly ObservableCollection<string> _files = [];
     private bool _updating;
+    private bool _isInitialized;
     private static readonly Dictionary<string, (string English, string Chinese)> Text = new()
     {
         ["title"] = ("HardLinker", "HardLinker"), ["subtitle"] = ("Create Windows file hard links", "快速创建 Windows 文件硬链接"),
@@ -53,6 +56,7 @@ public partial class MainWindow : Window
         LanguageCombo.SelectedIndex = string.Equals(_settings.Language, "zh", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         ApplyLanguage();
         RefreshChoices();
+        _isInitialized = true;
     }
 
     private void AddFiles_Click(object sender, RoutedEventArgs e)
@@ -63,7 +67,8 @@ public partial class MainWindow : Window
             Multiselect = true,
             CheckFileExists = true,
             Title = T("pickSource"),
-            InitialDirectory = initialSourceFolder
+            InitialDirectory = initialSourceFolder,
+            ClientGuid = CreateFileDialogClientGuid(initialSourceFolder)
         };
         if (dialog.ShowDialog() == true)
         {
@@ -134,6 +139,15 @@ public partial class MainWindow : Window
         return !string.IsNullOrWhiteSpace(defaultPath) && Directory.Exists(defaultPath) ? defaultPath : "";
     }
 
+    private static Guid CreateFileDialogClientGuid(string initialDirectory)
+    {
+        var normalizedPath = string.IsNullOrWhiteSpace(initialDirectory)
+            ? "<empty>"
+            : Path.TrimEndingDirectorySeparator(Path.GetFullPath(initialDirectory)).ToUpperInvariant();
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"HardLinker.OpenFileDialog:{normalizedPath}"));
+        return new Guid(hash.AsSpan(0, 16));
+    }
+
     private string? PickFolder(string initialPath)
     {
         using var dialog = new FolderBrowserDialog { Description = T("pickFolder"), UseDescriptionForTitle = true, ShowNewFolderButton = true };
@@ -183,7 +197,7 @@ public partial class MainWindow : Window
 
     private void Language_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_updating || LanguageCombo.SelectedItem is not ComboBoxItem item || item.Tag is not string language) return;
+        if (!_isInitialized || _updating || LanguageCombo.SelectedItem is not ComboBoxItem item || item.Tag is not string language) return;
         _settings.Language = language;
         SettingsStore.Save(_settings);
         ApplyLanguage();
@@ -312,6 +326,8 @@ public partial class MainWindow : Window
 
 internal sealed class AppSettings
 {
+    public AppSettings() { }
+
     public List<string> FileTargets { get; set; } = [];
     public List<string> FolderNames { get; set; } = [];
     public string Language { get; set; } = "en";
@@ -327,11 +343,16 @@ internal sealed class AppSettings
 internal static class SettingsStore
 {
     private static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HardLinker", "settings.json");
-    private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true
+    };
 
     public static AppSettings Load()
     {
-        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new() : new(); }
+        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), Options) ?? new() : new(); }
         catch { return new(); }
     }
 
